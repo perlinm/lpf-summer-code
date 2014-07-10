@@ -1,0 +1,253 @@
+\documentclass[10pt,twocolumn]{article}
+
+%%% Standard
+\usepackage[margin=1in]{geometry} % One inch margins
+\frenchspacing % No double spaces after periods.  Like this.
+\usepackage{fancyhdr} % Easy to manage headers and footers
+\usepackage{hyperref} % For linking references
+\pagestyle{fancyplain} % Formatting things
+\linespread{1} % Single spaced
+\setlength{\parindent}{0cm} % Don't indent new paragraphs
+\newcommand{\psl}{6pt} % For consistency (\psl used again below)
+\parskip \psl % Place a space between paragraphs instead
+\usepackage{comment} % Adds \comment{} environment
+\usepackage{lastpage} % For referencing last page
+\usepackage{enumitem} % Include for \setlist{}
+\setlist{nolistsep} % More compact spacing between environments
+\setlist[itemize]{leftmargin=*} % Nice margins for itemize
+\setlist[enumerate]{leftmargin=*} % and enumerate environments
+
+%%% One column header:
+\newcommand{\head}[1]{
+\twocolumn[\begin{@twocolumnfalse}
+\vspace{-5mm}
+\begin{center} #1 \end{center}
+\end{@twocolumnfalse}]}
+
+%%% Figures:
+\usepackage{graphicx,grffile,float,subcaption} % Floats, etc.
+\usepackage{multirow} % For multirow entries in tables
+
+%%% Sections:
+\usepackage{sectsty,titlesec} % Section options
+\sectionfont{\large} % Define section font size
+\subsectionfont{\normalsize} % Subsection font size
+
+%%% Standard math:
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools} % Math packages
+\newcommand{\st}{\displaystyle} % For making inline math bigger
+\renewcommand{\t}{\text} % For text in math environment
+\renewcommand{\c}{\cdot} % Multiplication dot in math
+\newcommand{\f}[2]{\dfrac{#1}{#2}} % Shortcut for fractions
+\newcommand{\p}[1]{\left(#1\right)} % Parenthesis
+\renewcommand{\sp}[1]{\left[#1\right]} % Square parenthesis
+\newcommand{\set}[1]{\left\{#1\right\}} % Curly parenthesis
+\newcommand{\R}{\mathbb{R}} % Commonly used sets
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\renewcommand{\P}{\mathbb{P}}
+\renewcommand{\S}{\mathbb{S}}
+\newcommand{\fa}{\forall} % Math symbol
+\newcommand{\m}[1]{\begin{pmatrix}#1\end{pmatrix}} % Matrix
+\newcommand{\vm}[1]{\begin{vmatrix}#1\end{vmatrix}} % Determinant
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+%%% Physics symbols, notations, operators
+\usepackage[boldvectors,braket]{physymb} % Physics packages
+\usepackage{tensor}
+\renewcommand{\v}{\vec} % Bold vectors
+\newcommand{\uv}[1]{\hat{\vec{#1}}} % Unit vectors
+\newcommand{\del}{\v\nabla} % Del operator
+\renewcommand{\d}{\partial} % Partial d
+\newcommand{\x}{\times} % Multiplication 'x'
+\renewcommand{\braket}{\Braket} % Resize brakets automatically
+\newcommand{\bk}{\braket} % Shorthand
+\renewcommand{\bra}{\Bra}
+\renewcommand{\ket}{\Ket}
+\newcommand{\ind}{\indices} % Shorthand for tensor indices
+\let\vepsilon\epsilon % Remap normal epsilon to vepsilon
+\let\vphi\phi % Remap normal phi to vphi
+\renewcommand{\epsilon}{\varepsilon} % Prettier epsilon
+\renewcommand{\phi}{\varphi} % Prettier phi
+\renewcommand{\l}{\ell} % Prettier l
+\renewcommand{\r}{\scriptr} % Script r
+
+\renewcommand{\headrulewidth}{0.5pt} % Horizontal line in header
+\cfoot{\thepage~of \pageref{LastPage}} % "X of Y" page labeling
+\lhead{Michael A. Perlin}
+\rhead{2014--07--03}
+
+\renewcommand{\sc}{_{\t{sc}}}
+\newcommand{\tm}{_{\t{tm}}}
+\newcommand{\ti}{^{\p{i}}}
+
+\begin{document}
+\titlespacing{\section}{0pt}{\psl}{0pt}
+\titlespacing{\subsection}{5mm}{\psl}{0pt}
+
+\head{ \large \bf LPF Internship Progress Report (Week 3 of 10) }
+
+\section*{Introduction}
+
+This report explains work done in an attempt to extract information
+about the space craft and thrusters on the LPF by analyzing simulated
+thruster command signals and space craft acceleration data (both
+linear and angular) relative to two free-falling test masses. In
+simulations, eight thrusters are commanded to generate thrust
+oscillating at distinct frequencies; these frequencies are used to
+identify a particular thruster's contribution to the motion of the
+space craft relative to the test masses. The space craft's response to
+each thruster is then used to determine thruster time delays (the time
+difference between a thruster command and its response), calibration
+(the ratio of measured to commanded thrust) and orientation (the
+altitude and azimuth in which the thruster points, relative to the
+mechanical frame of the space craft). Orientation calculations assume
+knowledge about the positions of the test masses and the space craft's
+center of mass relative to the mechanical frame of the space craft,
+and calibration calculations assume knowledge about the mass of the
+space craft.
+
+\section*{Isolating Signals}
+
+Each thruster (indexed by $i$) is commanded to generate a thrust
+$T\ti$ given by
+\begin{align}
+  T\ti=F\ti\sin\p{\omega\ti t+\phi\ti}+A_{\t c}\ti,
+\end{align}
+where $F\ti$ is a time-independent amplitude, $\omega\ti$ is an
+angular frequency unique to each thruster, $\phi\ti$ is some signal
+phase, and $A_{\t c}\ti$ is the sum of all commands sent to the
+thruster by the space craft's attitude control system (which are
+generally aperiodic). Given their total commanded signal, each
+thruster's characteristic angular frequency $\omega\ti$ and amplitude
+$F\ti$ are identified from the signal's amplitude spectrum. The
+amplitudes for all thrusters in all simulations thus analyzed are
+about $500~\t{nN}$ at frequencies $\sim10~\t{mHz}$ (with bandwidths of
+$\sim100~\mu\t{Hz}$).
+
+After identifying thruster signal frequencies, all time-series
+acceleration data is filtered through a low-pass filter at a cutoff
+frequency of $30~\t{mHz}$ to mitigate aliasing from high frequency
+noise, downsampled from $10~\t{Hz}$ to $100~\t{mHz}$, and filtered
+through band-pass filters at the characteristic frequencies of the
+thrusters. Downsampling prior to using the band-pass filter reduces
+the dynamic range on filter coefficients, and hence reduces numerical
+errors in the filter. The resulting signals for each data set from
+each band-pass filter are the isolated response of each measured
+quantity, and are stored independently.
+
+Thruster command signals are processed in the same manner (by low-pass
+filtering, downsampling, and band-pass filtering each thruster at its
+own frequency) to account for amplitude changes and phase shifts due
+to filtering.
+
+\section*{Time Delay}
+
+A transfer function of the post-processing thruster signals to
+accelerations is calculated to find their relative phase difference
+$\Delta\phi\in[0,\pi]$ at the frequency of the thruster signal. The
+direction of acceleration in response to a positive thruster signal
+($+/-$) is given by whether the magnitude $\abs{\Delta\phi}$ is less
+($+$) or greater ($-$) than $\pi/2$. The phase
+\begin{align}
+  \Delta\phi'=\left\{
+    \begin{array}{ll}
+      \Delta\phi & \Delta\phi \le \pi/2 \\
+      \pi-\Delta\phi & \Delta\phi > \pi/2
+    \end{array}\right.
+\end{align}
+is then taken as the direction-independent phase difference in the
+signals, and used to find the time delay $\Delta t$ of the thrusters
+by the relation
+\begin{align}
+  \Delta\phi'=\omega\Delta t\implies\Delta t=\f{\Delta\phi'}\omega.
+\end{align}
+As each acceleration data set yields its own delay for each thruster,
+delays from all data sets at each thruster frequency are averaged to
+find the delays of individual thrusters. Delays vary by simulation,
+but are typically in the range $0.3$--$1$ s.
+
+\section*{Orientation and Calibration}
+
+Finding the calibration and orientation of the thrusters requires
+first finding the contribution to linear acceleration $\v a\ti\sc$ of
+the space craft by the thruster indexed by $i$, which is given by
+\begin{align}
+  \v a\ti\sc=\v a\ti\tm-\boldsymbol\alpha\ti\tm\times\v r\tm,
+\end{align}
+where $\v a\ti\tm$ and $\boldsymbol\alpha\ti\tm$ are the contributions
+to linear and angular acceleration of the space craft by thruster $i$
+and $\v r\tm$ is the position of a test mass relative to the space
+craft's center of mass. Neglected in this equation are corrections for
+the Coriolis and centrifugal forces in the rotating frame of the test
+mass, which were found to be of orders $10^{-6}$ and $10^{-8}$
+respectively smaller than the included terms. It is also assumed that
+changes in $\v r\tm$ are negligibly small, so that it can be taken as
+constant, and that the space craft's center of mass is constant
+relative to the mechanical frame of the space craft, so that
+accelerations relative to the mechanical frame (i.e. acceleration
+data) are equal to accelerations relative to the center of mass.
+
+After finding $\v a\sc\ti$, a covariance matrix $\v V\ti$ of its
+components along the axes of the space craft's mechanical frame is
+computed, with elements $V_{k\l}\ti$ given by:
+\begin{align}
+  V_{k\l}\ti=\bk{\p{a\ti_k-\bk{a\ti_k}}\p{a\ti_\l-\bk{a\ti_\l}}}.
+\end{align}
+Here $a\ti_n=\v a\sc\ti\c\v x_n$, where $\set{\v x_n}$ are the basis
+vectors of the mechanical frame, and $\bk\chi$ denotes the expectation
+value of the variable $\chi$. The eigenvectors of $\v V\ti$ define the
+principal axes of $\v a\sc\ti$ in the basis of the mechanical frame,
+with corresponding eigenvalues equal to the variance of $\v a\sc\ti$
+along the respective principle axes. As $\v a\sc\ti$ is an
+acceleration in response to the thrust provided by thruster $i$, the
+eigenvector corresponding to the largest eigenvalue of $\v V\ti$ is
+parallel to the direction of thrust; motion in orthogonal directions
+(along the remaining eigenvectors) are due to signal noise, error, or
+otherwise unaccounted for effects at the frequency of thruster
+$i$. This eigenvector thus points in the direction of thrust (of
+thruster $i$) up to sign; the ambiguity in sign is resolved using
+knowledge about the direction of accelerations given a positive thrust
+or by approximate knowledge of thruster orientations to find the
+orientation of each thruster. Pitch (the angle above the $x$-$y$
+plane) and azimuth (the angle in the $x$-$y$ plane, from the $x$ axis
+to the $y$ axis) are thus determined to an accuracy of about 1
+microradian.
+
+Given that $\v a\sc\ti$ is sinusoidal, its amplitude $a\sc\ti$ is
+given in terms of the variance $\p{\sigma\sc\ti}^2$ along its
+principal axis by
+\begin{align}
+  a\sc\ti=\sqrt2\p{\sigma\sc\ti}^2.
+\end{align}
+The calibration $C\ti$ of thruster $i$ is then given in terms of the
+mass $m\sc$ of the space craft by
+\begin{align}
+  C\ti=\f{m\sc a\sc\ti}{F\ti}.
+\end{align}
+These measured calibrations typically lie in the range $0.97$--$1.03$
+(whereas all simulated calibrations are exactly 1).
+
+\section*{Further Directions}
+
+There are currently several current pursuits in this work. Firstly,
+there are some unaccounted for discrepancies in the measured time
+delays. Secondly, the calibrations of all thrusters are set to unity
+in simulations. While $1-3\%$ relative errors in deduced calibrations
+may attributed to error, these are larger than one would expect, and
+from qualitative inspection of the actual numbers there appears to be
+some systematic errors in the results. Thirdly, the behaviors of all
+$\v a\sc\ti$ in the respective plane perpendicular to their principal
+axes appear to be regular and periodic; such behavior is not expected
+to occur absent of error (motion in this plane is expected to be
+random and unpredictable), and is not presently understood. Finally,
+the assumption that the center of mass of the space craft is
+stationary relative to the mechanical frame may not be robust. It may
+be possible to deduce the center of mass of the space craft from
+thruster inputs and response data if the locations of the thrusters
+are known in the mechanical frame. There is thus an effort to see what
+information can be deduced from data about the center of mass if its
+location is unknown.
+
+\end{document}

@@ -1,0 +1,99 @@
+\documentclass[10pt]{article}
+
+%%% Standard
+\usepackage[margin=1in]{geometry} % One inch margins
+\frenchspacing % No double spaces after periods.  Like this.
+\usepackage{fancyhdr} % Easy to manage headers and footers
+\usepackage{hyperref} % For linking references
+\pagestyle{fancyplain} % Formatting things
+\linespread{1} % Single spaced
+\setlength{\parindent}{0cm} % Don't indent new paragraphs
+\newcommand{\psl}{6pt} % For consistency (\psl used again below)
+\parskip \psl % Place a space between paragraphs instead
+\usepackage{comment} % Adds \comment{} environment
+\usepackage{lastpage} % For referencing last page
+\usepackage{enumitem} % Include for \setlist{}
+\setlist{nolistsep} % More compact spacing between environments
+\setlist[itemize]{leftmargin=*} % Nice margins for itemize
+\setlist[enumerate]{leftmargin=*} % and enumerate environments
+
+%%% One column header:
+\newcommand{\head}[1]{
+\twocolumn[\begin{@twocolumnfalse}
+\vspace{-5mm}
+\begin{center} #1 \end{center}
+\end{@twocolumnfalse}]}
+
+%%% Figures:
+\usepackage{graphicx,grffile,float,subcaption} % Floats, etc.
+\usepackage{multirow} % For multirow entries in tables
+
+%%% Sections:
+\usepackage{sectsty,titlesec} % Section options
+\sectionfont{\large} % Define section font size
+\subsectionfont{\normalsize} % Subsection font size
+
+%%% Standard math:
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools} % Math packages
+\newcommand{\st}{\displaystyle} % For making inline math bigger
+\renewcommand{\t}{\text} % For text in math environment
+\renewcommand{\c}{\cdot} % Multiplication dot in math
+\newcommand{\f}[2]{\dfrac{#1}{#2}} % Shortcut for fractions
+\newcommand{\p}[1]{\left(#1\right)} % Parenthesis
+\renewcommand{\sp}[1]{\left[#1\right]} % Square parenthesis
+\newcommand{\set}[1]{\left\{#1\right\}} % Curly parenthesis
+\newcommand{\R}{\mathbb{R}} % Commonly used sets
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\renewcommand{\P}{\mathbb{P}}
+\renewcommand{\S}{\mathbb{S}}
+\newcommand{\fa}{\forall} % Math symbol
+\newcommand{\m}[1]{\begin{pmatrix}#1\end{pmatrix}} % Matrix
+\newcommand{\vm}[1]{\begin{vmatrix}#1\end{vmatrix}} % Determinant
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
+
+%%% Physics symbols, notations, operators
+\usepackage[boldvectors,braket]{physymb} % Physics packages
+\usepackage{tensor}
+\renewcommand{\v}{\vec} % Bold vectors
+\newcommand{\uv}[1]{\hat{\vec{#1}}} % Unit vectors
+\newcommand{\del}{\v\nabla} % Del operator
+\renewcommand{\d}{\partial} % Partial d
+\newcommand{\x}{\times} % Multiplication 'x'
+\renewcommand{\braket}{\Braket} % Resize brakets automatically
+\newcommand{\bk}{\braket} % Shorthand
+\renewcommand{\bra}{\Bra}
+\renewcommand{\ket}{\Ket}
+\newcommand{\ind}{\indices} % Shorthand for tensor indices
+\let\vepsilon\epsilon % Remap normal epsilon to vepsilon
+\let\vphi\phi % Remap normal phi to vphi
+\renewcommand{\epsilon}{\varepsilon} % Prettier epsilon
+\renewcommand{\phi}{\varphi} % Prettier phi
+\renewcommand{\l}{\ell} % Prettier l
+\renewcommand{\r}{\scriptr} % Script r
+
+\renewcommand{\headrulewidth}{0.5pt} % Horizontal line in header
+\cfoot{\thepage~of \pageref{LastPage}} % "X of Y" page labeling
+\lhead{Michael A. Perlin}
+\rhead{2014--07--08}
+
+\usepackage{cprotect}
+\usepackage{verbatim}
+\usepackage{morefloats}
+
+\usepackage{caption}
+\RequirePackage[singlelinecheck=off]{caption}
+\captionsetup{justification=centering}
+
+\begin{document}
+\titlespacing{\section}{0pt}{\psl}{0pt}
+\titlespacing{\subsection}{5mm}{\psl}{0pt}
+
+\begin{center}
+  \Large \bf Data Tables
+\end{center}
+
+\input{code/data_tables.tex}
+
+\end{document}

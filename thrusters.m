@@ -1,4 +1,4 @@
-% this script uses simulated thruster inputs and test mass response 
+% this script uses simulated thruster inputs and test mass response
 % data to extract information about the space craft
 
 %% clear workspace
@@ -7,16 +7,17 @@ clearvars -except set;
 
 %% load data
 
-tic; fprintf('loading data... ');
-% choices for data files
+tic; fprintf('\nloading data (set %i)... ',set);
+% list data files
+data_dir = '/home/perlinm/lpf/code/data';
 data_files = {'2014-06-30_planar.mat',...
               '2014-06-30_planar_destiff.mat',...
               '2014-06-30_planar_destiff_decapact.mat',...
               '2014-06-30_planar_destiff_decapact_tweak.mat',...
               '2014-07-02_3D.mat',...
               '2014-07-02_3D_diag.mat'};
-% files which use "pKey" instead of "pDefault" to store parameters
-p_key_files = [1 2 4];
+% files which store parameters in "pDefault" instead of "pKey"
+p_def_files = [3 5];
 % files which only contain 2D data in the x-y plane
 two_dim_files = 1:4;
 
@@ -24,29 +25,25 @@ two_dim_files = 1:4;
 if ~exist('set','var') || set > 6
     error('choose a valid data set');
 else
-    load(data_files{set});
+    load(sprintf('%s/%s',data_dir,data_files{set}));
 end
-if find(p_key_files == set)
-    pDefault = pKey;
+if find(p_def_files == set)
+    pKey = pDefault;
 end
 
 % extract input parameters
 for t = 1:length(TC)
     % thruster calibration
-    calib_inp(t) = pDefault.find(sprintf('CMNT_T%i_CAL',t));
+    calib_inp(t) = pKey.find(sprintf('CMNT_T%i_CAL',t)).y;
     % location of thruster
     r_th_inp(t,:) = ...
-        ao_vec([pDefault.find(sprintf('CMNT_T%i_POS_X',t)).y,...
-                pDefault.find(sprintf('CMNT_T%i_POS_Y',t)).y,...
-                pDefault.find(sprintf('CMNT_T%i_POS_Z',t)).y],'m');
+        ao_vec([pKey.find(sprintf('CMNT_T%i_POS_X',t)).y,...
+                pKey.find(sprintf('CMNT_T%i_POS_Y',t)).y,...
+                pKey.find(sprintf('CMNT_T%i_POS_Z',t)).y],'m');
     % thruster pitch
-    alpha_inp(t) = pDefault.find(sprintf('CMNT_T%i_ALPHA',t));
+    alpha_inp(t) = pKey.find(sprintf('CMNT_T%i_ALPHA',t)).y;
     % x-y angle of thruster
-    beta_inp(t) = pDefault.find(sprintf('CMNT_T%i_BETA',t));
-    % projection of thruster (unit vector in the direction it points)
-    proj_inp(t,:) = [cos(alpha_inp(t).y)*cos(beta_inp(t).y),...
-                     cos(alpha_inp(t).y)*sin(beta_inp(t).y),...
-                     sin(alpha_inp(t).y)];
+    beta_inp(t) = pKey.find(sprintf('CMNT_T%i_BETA',t)).y;
 end
 
 % fake 3D data, if necessary
@@ -83,10 +80,12 @@ r_tm_mechanical = [ao_vec([0.188,0,0.6093],'m');...
                    ao_vec([-0.188,0,0.6093],'m')];
 % locations of test masses relative to center of mass
 r_tm = r_tm_mechanical - repmat(r_com_mechanical,num_masses,1);
-    
+
 % mass and moment of inertia of space sraft
 m_sc = ao(422.7,plist('yunits','kg'));
-I_sc = ao(191.7,plist('yunits','kg m^2'));
+I_sc_xx = ao(202.5,plist('yunits','kg m^2'));
+I_sc_yy = ao(209.7,plist('yunits','kg m^2'));
+I_sc_zz = ao(191.7,plist('yunits','kg m^2'));
 radian = ao(1,plist('yunits','rad'));
 
 x_d = @(m) 6*m-5; % for indexing accel_data
@@ -228,12 +227,12 @@ for s = 1:num_sets
             phase(s,t) = abs(phase(s,t) - pi);
         end
         % find time delay from phase
-        all_delays(s,t) = phase(s,t).y/(2*pi*frequency(t));
+        delay_all(s,t) = phase(s,t).y/(2*pi*frequency(t).y);
     end
 end
 for t = 1:num_thrusters
     % find average delay for each thruster
-    delay(t) = average(all_delays(:,t));
+    delay(t) = average(delay_all(:,t));
 end
 time = toc; fprintf('%.0f sec\n',time);
 
@@ -243,9 +242,9 @@ tic; fprintf('finding thruster calibrations and orientations... ');
 for t = 1:num_thrusters
     % calibration (calib), pitch (alpha), and x-y angle (beta) of
     %   thrusters, averaged over results from all test masses
-    calib_mean(t) = 0;
-    alpha_mean(t) = 0;
-    beta_mean(t) = 0;
+    calib(t) = 0;
+    alpha(t) = 0;
+    beta(t) = 0;
     for m = 1:num_masses
         % time series acceleration and velocity vectors
         accel_tm(t,m,:) = ...
@@ -271,22 +270,23 @@ for t = 1:num_thrusters
         [evecs(t,m,:,:),cov_diag(t,m,:,:)] = ...
             eigs(accel_com_cov(t,m).y);
         % thruster calibration, pitch, and x-y angle
-        calib(t,m) = input_mag(t).y/(m_sc.y*sqrt(2*cov_diag(t,m,1,1)));
-        alpha(t,m) = ...
+        calib_all(t,m) = ...
+            m_sc.y*sqrt(2*cov_diag(t,m,1,1))/input_mag(t).y;
+        alpha_all(t,m) = ...
             atan2(-accel_com_dir(z_d(m),t)*abs(evecs(t,m,z_c,1)),...
             sqrt(evecs(t,m,x_c,1)^2 + evecs(t,m,y_c,1)^2));
-        beta(t,m) = ...
+        beta_all(t,m) = ...
             atan2(-accel_com_dir(y_d(m),t)*abs(evecs(t,m,y_c,1)),...
                   -accel_com_dir(x_d(m),t)*abs(evecs(t,m,x_c,1)));
-        calib_mean(t) = calib_mean(t) + calib(t,m)/num_masses;
-        alpha_mean(t) = alpha_mean(t) + alpha(t,m)/num_masses;
-        beta_mean(t) = beta_mean(t) + beta(t,m)/num_masses;
+        calib(t) = calib(t) + calib_all(t,m)/num_masses;
+        alpha(t) = alpha(t) + alpha_all(t,m)/num_masses;
+        beta(t) = beta(t) + beta_all(t,m)/num_masses;
     end
 end
 % error in calibration, pitch, and x-y angle
-calib_error = calib_mean-calib_inp.y;
-alpha_error = alpha_mean-alpha_inp.y;
-beta_error = beta_mean-beta_inp.y;
+calib_error = calib-calib_inp.y;
+alpha_error = alpha-alpha_inp.y;
+beta_error = beta-beta_inp.y;
 time = toc; fprintf('%.0f sec\n',time);
 
 %% find center of mass responses in the respective eigenbases
@@ -299,4 +299,17 @@ for t = 1:num_thrusters
             in_basis(evecs(t,m,:,:),accel_com(t,m,:));
     end
 end
+time = toc; fprintf('%.0f sec\n',time);
+
+%% save data and calculations
+
+tic; fprintf('saving results... ');
+save(sprintf('%s/all-%i.mat',data_dir,set));
+save(sprintf('%s/calc-%i.mat',data_dir,set),...
+        'num_sets','num_thrusters','num_masses',...
+        'delay_all','delay',...
+        'calib_inp','calib_all','calib','calib_error',...
+        'alpha_inp','alpha_all','alpha','alpha_error',...
+        'beta_inp','beta_all','beta','beta_error');
+data_tables;
 time = toc; fprintf('%.0f sec\n',time);
