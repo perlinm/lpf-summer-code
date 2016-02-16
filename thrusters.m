@@ -31,7 +31,7 @@ else
     trial_id = 'ModAll3D_set1';
   end
   
-  file_dir = [data_dir,'../../trial_',trial_id,'/estimated/'];
+  file_dir = [data_dir,'../../CMNTModulationAnalysis/',trial_id,'/estimated/'];
   load([file_dir,'Acc_1scx.mat']); tm1x = objs;
   load([file_dir,'Acc_1scy.mat']); tm1y = objs;
   load([file_dir,'Acc_1scz.mat']); tm1z = objs;
@@ -50,7 +50,9 @@ else
     load([file_dir,sprintf('DST110%i.mat',52+tc)]); TC(tc) = objs;
   end
 
-  load([file_dir,'../',trial_id,'.key.mat']); pKey = objs;
+  load([data_dir,trial_id,'.key.mat']); pKey = objs;
+
+  clear objs;
 end
 if find(p_def_files == set)
   pKey = pDefault;
@@ -295,9 +297,9 @@ for t = 1:num_thrusters
   beta(t) = mean(beta_all(t,:));
 end
 % error in calibration, pitch, and x-y angle
-calib_error = calib-calib_inp;
-alpha_error = alpha-alpha_inp;
-beta_error = beta-beta_inp;
+calib_error = calib - calib_inp;
+alpha_error = alpha - alpha_inp;
+beta_error = beta - beta_inp;
 time = toc; fprintf('%.0f sec\n',time);
 
 %% find center of mass responses in the respective eigenbases
@@ -323,3 +325,4 @@ save(sprintf('%s/calc-%i.mat',data_dir,set),...
              'alpha_inp','alpha_all','alpha','alpha_error',...
              'beta_inp','beta_all','beta','beta_error');
 data_tables;
+time = toc; fprintf('%.0f sec\n',time);
